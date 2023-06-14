@@ -41,7 +41,7 @@ class GUI:
         BuscarA.pack(side=LEFT, padx=5)
         EliminarA= Button(self.ventana, text="Eliminar Aeropuerto", command=self.formulario_eliminar)
         EliminarA.pack(side=LEFT, padx=5)
-        EditarA= Button(self.ventana, text="Editar Aeropuerto")
+        EditarA= Button(self.ventana, text="Editar Aeropuerto", command=self.formulario_editar_aero)
         EditarA.pack(side=LEFT, padx=5)
         CrearT= Button(self.ventana, text="Crear Trayecto", command=self.open_trayecto)
         CrearT.pack(side=LEFT, padx=5)
@@ -220,20 +220,23 @@ class GUI:
                 x=lista[2]
                 self.lista.remove(lista)
         for lista in self.lista_Nombres():
-            nombre_trayecto1=nombre+"-"+lista[0]
-            nombre_trayecto2=lista[0]+"-"+nombre
+            nombre_trayecto1=nombre+"-"+lista
+            nombre_trayecto2=lista+"-"+nombre
             for Trayectos in self.lista_trayectos:
                 Trayecto=Trayectos[0]+"-"+Trayectos[1]
                 if(nombre_trayecto1==Trayecto):
                     self.lista_Nombres_Trayectos().remove(Trayecto)
                     self.lista_trayectos.remove(Trayectos)
-                    self.eliminar_lineas(nombre, lista[0])
+                    self.nombre_origen=nombre
+                    self.nombre_destino=lista
+                    self.eliminar_lineas()
                 else:
                     if(nombre_trayecto2==Trayecto):
                         self.lista_Nombres_Trayectos().remove(Trayecto)
-                        self.eliminar_lineas(lista[0],nombre)
+                        self.nombre_origen=lista
+                        self.nombre_destino=nombre
                         self.lista_trayectos.remove(Trayectos)
-                        
+                        self.eliminar_lineas()
         self.eliminar_circulos(x, nombre)    
     
     def eliminar_circulos(self, x, nombre):
@@ -251,17 +254,27 @@ class GUI:
         print(origen, destino)
         for lista in self.lista:
             if(lista[0]==origen):
+                print(lista[2])
                 x1=lista[2]
+                x2=0
             if(lista[0]==destino):
                 x2=lista[2]
-        for trayecto  in self.lista_trayectos:
-            if(trayecto[0]==origen and  trayecto[1]==destino):
-                self.lista_trayectos.remove(trayecto)
+                x1=0
         for linea in self.lineas:
-            if(self.canvas.coords(linea)[0]==x1 and self.canvas.coords(linea)[2]==x2):
+            print(self.canvas.coords(linea)[0])
+            if(self.canvas.coords(linea)[0]==x1):
                 self.canvas.delete(linea)
                 self.formulario.destroy()
-        
+                for trayecto  in self.lista_trayectos:
+                    if(trayecto[0]==origen and  trayecto[1]==destino):
+                        self.lista_trayectos.remove(trayecto)
+            if(self.canvas.coords(linea)[2]==x2):
+                self.canvas.delete(linea)
+                self.formulario.destroy()
+                for trayecto  in self.lista_trayectos:
+                    if(trayecto[0]==origen and  trayecto[1]==destino):
+                        self.lista_trayectos.remove(trayecto)
+
                 
                 
         
@@ -424,8 +437,58 @@ class GUI:
         return Trayectos
     def formulario_editar_aero(self):
         self.formulario = Toplevel(self.ventana)
-        self.formulario.title("Editar Trayecto")
-        lista=self.lista_Nombres()# lista de los nombres de lasaero lineas
+        self.formulario.title("Editar aeropuerto")
+        lista=self.lista_Nombres()# lista de los nombres de los aeropuertos
+        letrero = Label(self.formulario, text="Aeropuerto")
+        letrero.pack()
         
+        opciones = StringVar(self.formulario)
+        opciones.set(lista[0])
+        opcion_menu = OptionMenu(self.formulario, opciones, *lista, command=seleccionar_origen)# menu de opciones de origen
+        opcion_menu.pack()#primera opcion
         
+        pos_x_label = Label(self.formulario, text="Posición X:")
+        pos_x_label.pack()
+        self.pos_x_entry = Entry(self.formulario)#guarda la posicion en x del aeropuerto
+        self.pos_x_entry.pack()
+
+        pos_y_label = Label(self.formulario, text="Posición Y:")
+        pos_y_label.pack()
+        self.pos_y_entry = Entry(self.formulario)#guarda la posicion en y del aeropuerto
+        self.pos_y_entry.pack()
+        submit_button = Button(self.formulario, text="crear", command=self.editar_aero)
+        submit_button.pack()
+    def editar_aero(self):
+        aeropuerto=self.nombre_origen
+        x=int(self.pos_x_entry.get())-30
+        y=int(self.pos_y_entry.get())-30
+        x1=int(self.pos_x_entry.get())+30
+        y1=int(self.pos_y_entry.get())+30
+        for lista in self.lista:
+            if(aeropuerto==lista[0]):
+                x0=lista[2]-30
+                lista[2]=int(self.pos_x_entry.get())
+                lista[3]=int(self.pos_y_entry.get())
+        for circulo in self.circulos:
+            if(self.canvas.coords(circulo)[0]==x0):
+                self.canvas.coords(circulo,x,y,x1,y1)
+        for texto in self.Textos:
+            if(self.canvas.itemcget(texto, "text")==aeropuerto):
+                self.canvas.coords(texto, self.pos_x_entry.get(),self.pos_y_entry.get())
+                self.formulario.destroy()
+        for linea in self.lineas:
+            x3=self.canvas.coords(linea)[0]
+            y3=self.canvas.coords(linea)[1]
+            x2=self.canvas.coords(linea)[2]
+            y2=self.canvas.coords(linea)[3]
+            print(self.canvas.coords(linea)[0],x1)
+            print(self.canvas.coords(linea)[2],x2)
+            if(self.canvas.coords(linea)[0]==x0+30):
+                self.canvas.coords(linea,x+30,y+30,x2,y2)
+                self.formulario.destroy()
+            if(self.canvas.coords(linea)[2]==x0+30):
+                self.canvas.coords(linea,x3,y3,x+30,y+30)
+                self.formulario.destroy()
+    def formulario_editar_trayecto(self):
+        x=0
 gui = GUI()
