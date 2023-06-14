@@ -49,7 +49,7 @@ class GUI:
         BuscarT.pack(side=LEFT, padx=5)
         EliminarT= Button(self.ventana, text="Eliminar Trayecto",command=self.formulario_eliminar_trayecto)
         EliminarT.pack(side=LEFT, padx=5)
-        Editart= Button(self.ventana, text="Editar trayecto")
+        Editart= Button(self.ventana, text="Editar trayecto", command=self.formulario_editar_trayecto)
         Editart.pack(side=LEFT, padx=5)
 
         self.ventana.mainloop()
@@ -430,12 +430,12 @@ class GUI:
         for lista in self.lista:
             Nombres.append(lista[0])
         return Nombres
-    def lista_Nombres_Trayectos(self):
+    def lista_Nombres_Trayectos(self):# cre una lista de nombres de las rutas uniendo su origen y su destino
         Trayectos=[]
         for lista in self.lista_trayectos:
             Trayectos.append(lista[0]+"-"+lista[1])
         return Trayectos
-    def formulario_editar_aero(self):
+    def formulario_editar_aero(self):# formulario para editar la posicion de un aeropuerto
         self.formulario = Toplevel(self.ventana)
         self.formulario.title("Editar aeropuerto")
         lista=self.lista_Nombres()# lista de los nombres de los aeropuertos
@@ -456,22 +456,25 @@ class GUI:
         pos_y_label.pack()
         self.pos_y_entry = Entry(self.formulario)#guarda la posicion en y del aeropuerto
         self.pos_y_entry.pack()
-        submit_button = Button(self.formulario, text="crear", command=self.editar_aero)
+        submit_button = Button(self.formulario, text="Editar", command=self.editar_aero)
         submit_button.pack()
-    def editar_aero(self):
+    def editar_aero(self):# funcion donde se cambian los datos de el aero puerto
         aeropuerto=self.nombre_origen
+        #de x hasta y uno son los calores que debe tomar el circulo para formarse
         x=int(self.pos_x_entry.get())-30
         y=int(self.pos_y_entry.get())-30
         x1=int(self.pos_x_entry.get())+30
         y1=int(self.pos_y_entry.get())+30
-        for lista in self.lista:
+        for lista in self.lista:# busca el primer punto en x del circulo anterio
             if(aeropuerto==lista[0]):
                 x0=lista[2]-30
                 lista[2]=int(self.pos_x_entry.get())
                 lista[3]=int(self.pos_y_entry.get())
+        #busca el circulo con ese mismo punto inicial en x
         for circulo in self.circulos:
             if(self.canvas.coords(circulo)[0]==x0):
                 self.canvas.coords(circulo,x,y,x1,y1)
+        #busca el texto con ese mismo punto inicial en x
         for texto in self.Textos:
             if(self.canvas.itemcget(texto, "text")==aeropuerto):
                 self.canvas.coords(texto, self.pos_x_entry.get(),self.pos_y_entry.get())
@@ -490,5 +493,33 @@ class GUI:
                 self.canvas.coords(linea,x3,y3,x+30,y+30)
                 self.formulario.destroy()
     def formulario_editar_trayecto(self):
-        x=0
+        self.formulario = Toplevel(self.ventana)
+        self.formulario.title("Editar trayecto")
+        lista=self.lista_Nombres_Trayectos()# lista de los nombres de las rutas
+        letrero = Label(self.formulario, text="Trayecto")
+        letrero.pack()
+        opciones = StringVar(self.formulario)
+        opciones.set(lista[0])#primera opcion
+        opcion_menu = OptionMenu(self.formulario, opciones, *lista, command=seleccionar_origen)# menu de opciones del los trayectos disponibles
+        opcion_menu.pack()
+        
+        pos_x_label = Label(self.formulario, text="Duraccion")
+        pos_x_label.pack()
+        self.duracion = Entry(self.formulario)#guarda la duraccion del  del trayecto espesificado
+        self.duracion.pack()
+
+        pos_y_label = Label(self.formulario, text="Distacia:")
+        pos_y_label.pack()
+        self.distancia = Entry(self.formulario)#guarda la posicion la distanci del taryecto
+        self.distancia.pack()
+        submit_button = Button(self.formulario, text="Editar", command=self.editar_trayecto)
+        submit_button.pack()
+    def editar_trayecto(self):# ediata el calor de la distancia y el tiempo de un trayecto espesifo
+        for trayecto in self.lista_trayectos:# se llama la lista donde esta todas las rutas creadas 
+            nombre=trayecto[0]+"-"+trayecto[1]#nombre del origen y del destino separadps por un guion
+            if(nombre==self.nombre_origen):
+                trayecto[2]==self.duracion
+                trayecto[3]==self.distancia
+        self.formulario.destroy()
+        
 gui = GUI()
